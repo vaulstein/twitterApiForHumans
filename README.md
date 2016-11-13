@@ -1,6 +1,6 @@
 # Twitter API FOR HUMANS
 
-CLI TOOL that fetches twitter data and outputs to csv
+CLI TOOL that fetches twitter user/tweet search API data and outputs to csv
 
 ## Getting Started
 
@@ -48,5 +48,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Acknowledgments
 
 * Code from [Pelican](https://github.com/getpelican/pelican) used
-
-0
