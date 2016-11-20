@@ -2,10 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 import argparse
-import codecs
-import locale
 import os
-import string
 import datetime
 import sys
 import oauth2
@@ -352,6 +349,7 @@ required output.
         outfile = 'output.csv'
         print('Writing to output.csv')
         loader.write_csv(filename=outfile, make_strings=True)
+        os.remove(outfile)
         print('Output file generated.')
     else:
         print('Search yield no results')
