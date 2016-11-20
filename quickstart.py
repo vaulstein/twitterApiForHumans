@@ -11,6 +11,9 @@ import sys
 import oauth2
 import urllib
 import json
+import requests
+import gen_outline
+import json2csv
 
 import pytz
 
@@ -223,10 +226,32 @@ def oauth_req(url, consumer_key, consumer_secret, key, secret, http_method="GET"
 
 
 def get_json_data(url, parameters, consumer_key, consumer_secret, key, secret):
-    parameter_encode = urllib.urlencode(parameters)
-    search_result = oauth_req(url + parameter_encode, consumer_key, consumer_secret, key, secret)
-    search_result = json.loads(search_result)
-    return search_result
+    json_element = {"nodes": []}
+    page = 1
+    while True:
+        parameter_encode = urllib.urlencode(parameters)
+        search_result = oauth_req(url + parameter_encode, consumer_key, consumer_secret, key, secret)
+        search_result = json.loads(search_result)
+        if CONF['data_to_fetch'] == '1':
+            try:
+                statuses = search_result['statuses']
+                assert len(statuses) > 1
+            except (KeyError, AssertionError):
+                print('Empty response received.')
+                break
+            json_element['nodes'].extend(statuses)
+            max_id = statuses[-1]['id']
+            parameters['max_id'] = max_id
+        else:
+            try:
+                assert len(search_result) > 1
+            except AssertionError:
+                print('Empty response received.')
+                break
+            json_element['nodes'].extend(search_result)
+            page += 1
+            parameters['page'] = page
+    return json_element
 
 
 def main():
@@ -239,11 +264,11 @@ def main():
 
     args = parser.parse_args()
 
-    print('''Welcome to Twitter API for ALL v{v}.
+    print(r'''Welcome to Twitter API for ALL v{v}.
 
   _____        _ _   _               _   ___ ___    __           _  _ _   _ __  __   _   _  _ ___
  |_   _|_ __ _(_) |_| |_ ___ _ _    /_\ | _ \_ _|  / _|___ _ _  | || | | | |  \/  | /_\ | \| / __|
-   | | \ V  V / |  _|  _/ -_) '_|  / _ \|  _/| |  |  _/ _ \ '_| | __ | |_| | |\/| |/ _ \| .` \__
+   | | \ V  V / |  _|  _/ -_) '_|  / _ \|  _/| |  |  _/ _ \ '_| | __ | |_| | |\/| |/ _ \| .` \__ \
    |_|  \_/\_/|_|\__|\__\___|_|   /_/ \_\_| |___| |_| \___/_|   |_||_|\___/|_|  |_/_/ \_\_|\_|___/
 
 
@@ -276,8 +301,6 @@ required output.
                             answer=str_compat)
         request_params['q'] = CONF['query']
         url = 'https://api.twitter.com/1.1/users/search.json?'
-        print (get_json_data(url, request_params, CONF['consumer_key'], CONF['consumer_secret'],
-                             CONF['api_key'], CONF['api_secret']))
     else:
         print("You requested Tweet Data")
         CONF['query'] = ask('Search terms? ' +
@@ -287,12 +310,51 @@ required output.
         result_data_type = ask('Type of search results? 1/Popular 2/Recent 3/Mixed',
                                answer=list, default='1', options=[1, 2, 3])
         request_params['result_type'] = RESULT_MAP[result_data_type]
-        date = ask('Include tweets before? eg. 2015-07-19', answer=dateObject, default=None)
-        if date:
+        location = ask('Location? Eg. 1600 Amphitheatre Parkway, Mountain View, CA',
+                       answer=str_compat, default=" ")
+        if location.strip():
+            encode_location = urllib.urlencode({'address': location})
+            response_location = requests.get('https://maps.googleapis.com/maps/api/geocode/json?' +
+                                             encode_location)
+            try:
+                location_json = response_location.json()
+                location_data = location_json['results'][0]['geometry']['location']
+                location_array = [str(value) for value in location_data.itervalues()]
+                if location_array:
+                    radius_mi = ask('Distance to search within in meters',
+                                    answer=str_compat)
+
+                    location_array.append(radius_mi + u'mi')
+                    CONF['geocode'] = ",".join(location_array)
+                    request_params['geocode'] = CONF['geocode']
+            except:
+                print('Unable to fetch lat and long for location')
+
+        date = ask('Include tweets before? eg. 2015-07-19', answer=dateObject, default=" ")
+        if date.strip():
             request_params['until'] = date
         url = 'https://api.twitter.com/1.1/search/tweets.json?'
-        print(get_json_data(url, request_params, CONF['consumer_key'], CONF['consumer_secret'],
-                            CONF['api_key'], CONF['api_secret']))
+    print('Sending request to API...')
+    json_search_data = get_json_data(url, request_params, CONF['consumer_key'],
+                                     CONF['consumer_secret'],
+                                     CONF['api_key'], CONF['api_secret'])
+    if json_search_data['nodes']:
+        print('API response received.')
+        outline = gen_outline.make_outline(json_search_data, False, 'nodes')
+        print('Generating outline file..')
+        outfile = 'outline.json'
+        with open(outfile, 'w') as f:
+            json.dump(outline, f, indent=2, sort_keys=True)
+        print('Outline file generation done.')
+        key_map = json.load(outfile)
+        loader = json2csv.Json2Csv(key_map)
+        loader.load(args.json_file)
+        outfile = 'output.csv'
+        print('Writing to output.csv')
+        loader.write_csv(filename=outfile, make_strings=True)
+        print('Output file generated.')
+    else:
+        print('Search yield no results')
 
 if __name__ == "__main__":
     main()

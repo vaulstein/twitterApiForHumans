@@ -48,3 +48,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Acknowledgments
 
 * Code from [Pelican](https://github.com/getpelican/pelican) used
+* Json2csv converter used to convert Json response to Csv
