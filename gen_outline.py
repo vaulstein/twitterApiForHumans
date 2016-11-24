@@ -25,7 +25,8 @@ def line_iter(f):
 
 
 def coll_iter(f, coll_key):
-    data = json.load(f)
+    with open(f) as file_obj:
+        data = json.load(file_obj)
     for obj in data[coll_key]:
         yield obj
 

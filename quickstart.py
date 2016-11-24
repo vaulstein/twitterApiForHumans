@@ -11,6 +11,7 @@ import json
 import requests
 import gen_outline
 import json2csv
+import socket
 
 import pytz
 
@@ -225,16 +226,22 @@ def oauth_req(url, consumer_key, consumer_secret, key, secret, http_method="GET"
 def get_json_data(url, parameters, consumer_key, consumer_secret, key, secret):
     json_element = {"nodes": []}
     page = 1
+    max_id = None
     while True:
         parameter_encode = urllib.urlencode(parameters)
-        search_result = oauth_req(url + parameter_encode, consumer_key, consumer_secret, key, secret)
+        try:
+            search_result = oauth_req(url + parameter_encode, consumer_key, consumer_secret, key, secret)
+        except socket.error:
+            print('Connection timed-out. Try again later.')
+            break
         search_result = json.loads(search_result)
         if CONF['data_to_fetch'] == '1':
             try:
                 statuses = search_result['statuses']
                 assert len(statuses) > 1
             except (KeyError, AssertionError):
-                print('Empty response received.')
+                if not max_id:
+                    print('Empty response received.')
                 break
             json_element['nodes'].extend(statuses)
             max_id = statuses[-1]['id']
@@ -242,8 +249,9 @@ def get_json_data(url, parameters, consumer_key, consumer_secret, key, secret):
         else:
             try:
                 assert len(search_result) > 1
-            except AssertionError:
-                print('Empty response received.')
+            except (KeyError, AssertionError):
+                if page != 1:
+                    print('Empty response received.')
                 break
             json_element['nodes'].extend(search_result)
             page += 1
@@ -256,10 +264,6 @@ def main():
     parser = argparse.ArgumentParser(
         description="CLI tool to fetch twitter data",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-l', '--lang', metavar="lang",
-                        help='Set the default language')
-
-    args = parser.parse_args()
 
     print(r'''Welcome to Twitter API for ALL v{v}.
 
@@ -331,25 +335,32 @@ required output.
         if date.strip():
             request_params['until'] = date
         url = 'https://api.twitter.com/1.1/search/tweets.json?'
+    output_file_name = ask('Output file name',
+                           answer=str_compat, default="output")
     print('Sending request to API...')
     json_search_data = get_json_data(url, request_params, CONF['consumer_key'],
                                      CONF['consumer_secret'],
                                      CONF['api_key'], CONF['api_secret'])
     if json_search_data['nodes']:
         print('API response received.')
-        outline = gen_outline.make_outline(json_search_data, False, 'nodes')
+        with open('json_dump.json', 'w') as outfile:
+            json.dump(json_search_data, outfile)
+        outline = gen_outline.make_outline('json_dump.json', False, 'nodes')
         print('Generating outline file..')
         outfile = 'outline.json'
         with open(outfile, 'w') as f:
             json.dump(outline, f, indent=2, sort_keys=True)
         print('Outline file generation done.')
-        key_map = json.load(outfile)
+        with open(outfile) as f:
+            key_map = json.load(f)
         loader = json2csv.Json2Csv(key_map)
-        loader.load(args.json_file)
-        outfile = 'output.csv'
-        print('Writing to output.csv')
+        outfile = output_file_name + '.csv'
+        if os.path.isfile(outfile):
+            os.remove(outfile)
+        print('Writing to %s' % outfile)
+        with open('json_dump.json') as f:
+            loader.load(f)
         loader.write_csv(filename=outfile, make_strings=True)
-        os.remove(outfile)
         print('Output file generated.')
     else:
         print('Search yield no results')
