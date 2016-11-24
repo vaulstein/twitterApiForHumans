@@ -34,11 +34,11 @@ Please answer the following questions so this script can generate your
 required output.
 
 
- ``>`` Your Application's Consumer Key(API Key)? Found here: https://apps.twitter.com/
- ``>`` Your Application's Consumer Secret(API Secret)? Found here: https://apps.twitter.com/app/{ Your API}/keys
- ``>`` Your Access Token? Found here: https://apps.twitter.com/app/{ Your API}/keys
- ``>`` Your Access Token Secret? Found here: https://apps.twitter.com/app/{ Your API}/keys
- ``>`` Fetch Tweet Data or User Data? 1/Tweet 2/User [2] ( Type 1 for tweet search, 2 for User search)
+ > Your Application's Consumer Key(API Key)? Found here: https://apps.twitter.com/
+ > Your Application's Consumer Secret(API Secret)? Found here: https://apps.twitter.com/app/{ Your API}/keys
+ > Your Access Token? Found here: https://apps.twitter.com/app/{ Your API}/keys
+ > Your Access Token Secret? Found here: https://apps.twitter.com/app/{ Your API}/keys
+ > Fetch Tweet Data or User Data? 1/Tweet 2/User [2] ( Type 1 for tweet search, 2 for User search)
 
 Based on your selection you would be asked a few questions for the search parameters.
 
