@@ -25,14 +25,7 @@ Run the following command:
 
     python quickstart.py
 
-Welcome to Twitter API for ALL v1.0.dev0.
-
-This script will help you fetch tweet/user search data from Twitter API and convert it to
-your required format.
-
-Please answer the following questions so this script can generate your
-required output.
-
+On running the script you would be asked a set of questions that would help in fetching the required data
 
      > Your Application's Consumer Key(API Key)? Found here: https://apps.twitter.com/
      > Your Application's Consumer Secret(API Secret)? Found here: https://apps.twitter.com/app/{ Your API}/keys
@@ -47,8 +40,18 @@ The different search parameters can be found here:
 
 The first question is the query parameter, where you can use different operators to search data
 
+For fetching Tweet search data, the below is an example of questions:
+
+[![windowsDead5.png](https://s11.postimg.org/5di0egco3/windows_Dead5.png)](https://postimg.org/image/cgpvu2i3j/)
+[![windowsDead6.png](https://s3.postimg.org/5a2ol65f7/windows_Dead6.png)](https://postimg.org/image/hby2fbenj/)
+
 The last question would be the name of the output file you would want to write to.
 If you specify the same file name as the last, remember to take a backup.
+
+Remember twitter API is rate limited.
+Rate limits for tweet search are 450/15 minutes.
+Rate limits for user search are 900/15 minutes.
+
 
 ## Contributing
 

@@ -322,7 +322,7 @@ required output.
                 location_data = location_json['results'][0]['geometry']['location']
                 location_array = [str(value) for value in location_data.itervalues()]
                 if location_array:
-                    radius_mi = ask('Distance to search within in meters',
+                    radius_mi = ask('Distance to search within in miles',
                                     answer=str_compat)
 
                     location_array.append(radius_mi + u'mi')
@@ -331,9 +331,9 @@ required output.
             except:
                 print('Unable to fetch lat and long for location')
 
-        date = ask('Include tweets before? eg. 2015-07-19', answer=dateObject, default=" ")
-        if date.strip():
-            request_params['until'] = date
+        # date = ask('Include tweets before? eg. 2015-07-19', answer=dateObject, default=" ")
+        # if date.strip():
+        #     request_params['until'] = date
         url = 'https://api.twitter.com/1.1/search/tweets.json?'
     output_file_name = ask('Output file name',
                            answer=str_compat, default="output")
